@@ -1,0 +1,149 @@
+ML Assignment
+---
+
+```{r setup, include=FALSE}
+library(caret)
+library(ggplot2)
+library(randomForest)
+knitr::opts_chunk$set(fig.path='figure/', fig.width=10, fig.height=8, warning=FALSE)
+```
+
+### Load Data
+```{r, cache=TRUE}
+testData <- read.csv("pml-testing.csv", colClasses="character")
+trainData <- read.csv("pml-training.csv", colClasses="character")
+```
+
+```{r, cache=TRUE}
+dim(trainData)
+dim(testData)
+```
+
+### Explore data
+Explore the input dataset. Dataset contains of 160 columns.  
+First column is entry id, second is 'user_name' and final 160th one is actual Class of exercise.  
+More details about the dataset can be found here http://groupware.les.inf.puc-rio.br/har  
+These three columns have to be extracted as factor. Other columsn 3:159 are numeric values.
+```{r, cache=TRUE}
+trainData[,3:159]<-apply(trainData[,3:159], 2, as.numeric)
+trainData[,1]<-as.factor(trainData[,1])
+trainData[,2]<-as.factor(trainData[,2])
+trainData[,160]<-as.factor(trainData[,160])
+
+testData[,3:159]<-apply(testData[,3:159], 2, as.numeric)
+testData[,1]<-as.factor(testData[,1])
+testData[,2]<-as.factor(testData[,2])
+testData[,160]<-as.factor(testData[,160])
+```
+
+First few columns in the dataset tracks entry ID, timestamp, Date etc  
+These do not help in deciding the activity. Hence, these are removed from the dataset.
+```{r, cache=TRUE}
+names(trainData[,1:7])
+trainData <- trainData[,c(-1, -3:-7)]
+testData <- testData[,c(-1, -3:-7)]
+```
+
+
+### Remove missing data
+```{r, cache=TRUE}
+unique(colSums(!is.na(trainData)))
+```
+Many of the columns in the dataset have a lot of missing values (NA)  
+As a safety, we remove all columns which have more than half the data missing.
+```{r, cache=TRUE}
+selCol <- colSums(!is.na(trainData))> (nrow(trainData)/2)
+trainData <- trainData[,selCol]
+testData <- testData[,selCol]
+dim(trainData)
+dim(testData)
+```
+
+
+### Training and Testing
+```{r, cache=TRUE}
+set.seed(3433)
+inTrain = createDataPartition(trainData$classe, p = 0.7, list=FALSE)
+training = trainData[inTrain,]
+testing = trainData[-inTrain,]
+```
+After removing the unwanted columns we get a dataset with 54 columnns
+
+### Preprocess
+**Check for low variance factors**  
+It is quite possible that there might be some features which have very low variance  
+We want to remove these since it will slow down the training process without adding any accuracy.  
+'nearZeroVar' function checks if the descriptors are close to zero or have very low variance.
+```{r, cache=TRUE}
+nzv <- nearZeroVar(training, saveMetrics= TRUE)
+sum(nzv$nzv)
+```
+In this case, there were no descriptors with very low variance.  
+Hence no descriptors are removed from the dataset.  
+  
+**Check for highly correlated factors**
+```{r, cache=TRUE}
+# Remove user_name and classe columns
+filteredDescr <- training[,2:53]
+descrCor <-  cor(filteredDescr)
+highlyCorDescr <- findCorrelation(descrCor, cutoff = .95)
+filteredDescr <- filteredDescr[,-highlyCorDescr]
+dim(filteredDescr)
+
+# Add back user_name and classe columns
+trainDescr <- cbind(filteredDescr, training[,c(1,54)])
+dim(trainDescr)
+```
+Two columns were highly correlated and these are removed.  
+Similarly, the training data is also cleaned up.
+```{r, cache=TRUE}
+filteredDescr <- testing[,2:53]
+filteredDescr <- filteredDescr[,-highlyCorDescr]
+testDescr <- cbind(filteredDescr, testing[,c(1,54)])
+dim(testDescr)
+```
+
+### Train RandomForest
+```{r, cache=TRUE}
+# RandomForest
+startTime <- Sys.time()
+modFit <- randomForest(classe~., data=trainDescr)
+endTime <- Sys.time()
+endTime-startTime
+```
+
+#### Display model
+```{r, cache=TRUE}
+modFit
+```
+From the model, we see that **Out of Bag** error was only 0.5%  
+If there was no Overfitting, we should get a similar error on testing data  
+```{r, cache=TRUE}
+varImpPlot(modFit, main="Model")
+```
+
+```{r, cache=TRUE}
+plot(modFit, log="y", main="Model")
+```
+
+### Apply model on test data
+```{r, cache=TRUE}
+accuracy <- mean(predict(modFit, newdata=testDescr) == testDescr$classe)
+testError <- (1-accuracy)*100
+testError
+```
+There is only **0.8%** error on the test data.  
+So, there was no overfitting with the model.
+
+### Apply model to actual testing data to predict outcome
+```{r, cache=TRUE}
+filteredDescr <- testData[,2:53]
+filteredDescr <- filteredDescr[,-highlyCorDescr]
+testDescr <- cbind(filteredDescr, testData[,c(1,54)])
+dim(testDescr)
+
+# Final prediction
+outcome <- predict(modFit, newdata=testDescr)
+outcome
+```
+
