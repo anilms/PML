@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="description" content="Pml : ">
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>Pml</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/anilms/PML">View on GitHub</a>
+
+          <h1 id="project_title">Pml</h1>
+          <h2 id="project_tagline"></h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/anilms/PML/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/anilms/PML/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <h2>
+<a id="ml-assignment" class="anchor" href="#ml-assignment" aria-hidden="true"><span class="octicon octicon-link"></span></a>ML Assignment</h2>
+
+<h3>
+<a id="load-data" class="anchor" href="#load-data" aria-hidden="true"><span class="octicon octicon-link"></span></a>Load Data</h3>
+
+<div class="highlight highlight-r"><pre><span class="pl-smi">testData</span> <span class="pl-k">&lt;-</span> read.csv(<span class="pl-s"><span class="pl-pds">"</span>pml-testing.csv<span class="pl-pds">"</span></span>, <span class="pl-v">colClasses</span><span class="pl-k">=</span><span class="pl-s"><span class="pl-pds">"</span>character<span class="pl-pds">"</span></span>)
+<span class="pl-smi">trainData</span> <span class="pl-k">&lt;-</span> read.csv(<span class="pl-s"><span class="pl-pds">"</span>pml-training.csv<span class="pl-pds">"</span></span>, <span class="pl-v">colClasses</span><span class="pl-k">=</span><span class="pl-s"><span class="pl-pds">"</span>character<span class="pl-pds">"</span></span>)</pre></div>
+
+<div class="highlight highlight-r"><pre>dim(<span class="pl-smi">trainData</span>)</pre></div>
+
+<pre><code>## [1] 19622   160
+</code></pre>
+
+<div class="highlight highlight-r"><pre>dim(<span class="pl-smi">testData</span>)</pre></div>
+
+<pre><code>## [1]  20 160
+</code></pre>
+
+<h3>
+<a id="explore-data" class="anchor" href="#explore-data" aria-hidden="true"><span class="octicon octicon-link"></span></a>Explore data</h3>
+
+<p>Explore the input dataset. Dataset contains of 160 columns.<br>
+First column is entry id, second is 'user_name' and final 160th one is actual Class of exercise.<br>
+More details about the dataset can be found here <a href="http://groupware.les.inf.puc-rio.br/har">http://groupware.les.inf.puc-rio.br/har</a><br>
+These three columns have to be extracted as factor. Other columsn 3:159 are numeric values.</p>
+
+<div class="highlight highlight-r"><pre><span class="pl-smi">trainData</span>[,<span class="pl-c1">3</span><span class="pl-k">:</span><span class="pl-c1">159</span>]<span class="pl-k">&lt;-</span>apply(<span class="pl-smi">trainData</span>[,<span class="pl-c1">3</span><span class="pl-k">:</span><span class="pl-c1">159</span>], <span class="pl-c1">2</span>, <span class="pl-smi">as.numeric</span>)
+<span class="pl-smi">trainData</span>[,<span class="pl-c1">1</span>]<span class="pl-k">&lt;-</span>as.factor(<span class="pl-smi">trainData</span>[,<span class="pl-c1">1</span>])
+<span class="pl-smi">trainData</span>[,<span class="pl-c1">2</span>]<span class="pl-k">&lt;-</span>as.factor(<span class="pl-smi">trainData</span>[,<span class="pl-c1">2</span>])
+<span class="pl-smi">trainData</span>[,<span class="pl-c1">160</span>]<span class="pl-k">&lt;-</span>as.factor(<span class="pl-smi">trainData</span>[,<span class="pl-c1">160</span>])
+
+<span class="pl-smi">testData</span>[,<span class="pl-c1">3</span><span class="pl-k">:</span><span class="pl-c1">159</span>]<span class="pl-k">&lt;-</span>apply(<span class="pl-smi">testData</span>[,<span class="pl-c1">3</span><span class="pl-k">:</span><span class="pl-c1">159</span>], <span class="pl-c1">2</span>, <span class="pl-smi">as.numeric</span>)
+<span class="pl-smi">testData</span>[,<span class="pl-c1">1</span>]<span class="pl-k">&lt;-</span>as.factor(<span class="pl-smi">testData</span>[,<span class="pl-c1">1</span>])
+<span class="pl-smi">testData</span>[,<span class="pl-c1">2</span>]<span class="pl-k">&lt;-</span>as.factor(<span class="pl-smi">testData</span>[,<span class="pl-c1">2</span>])
+<span class="pl-smi">testData</span>[,<span class="pl-c1">160</span>]<span class="pl-k">&lt;-</span>as.factor(<span class="pl-smi">testData</span>[,<span class="pl-c1">160</span>])</pre></div>
+
+<p>First few columns in the dataset tracks entry ID, timestamp, Date etc<br>
+These do not help in deciding the activity. Hence, these are removed from the dataset.</p>
+
+<div class="highlight highlight-r"><pre>names(<span class="pl-smi">trainData</span>[,<span class="pl-c1">1</span><span class="pl-k">:</span><span class="pl-c1">7</span>])</pre></div>
+
+<pre><code>## [1] "X"                    "user_name"            "raw_timestamp_part_1"
+## [4] "raw_timestamp_part_2" "cvtd_timestamp"       "new_window"          
+## [7] "num_window"
+</code></pre>
+
+<div class="highlight highlight-r"><pre><span class="pl-smi">trainData</span> <span class="pl-k">&lt;-</span> <span class="pl-smi">trainData</span>[,c(<span class="pl-k">-</span><span class="pl-c1">1</span>, <span class="pl-k">-</span><span class="pl-c1">3</span><span class="pl-k">:</span><span class="pl-k">-</span><span class="pl-c1">7</span>)]
+<span class="pl-smi">testData</span> <span class="pl-k">&lt;-</span> <span class="pl-smi">testData</span>[,c(<span class="pl-k">-</span><span class="pl-c1">1</span>, <span class="pl-k">-</span><span class="pl-c1">3</span><span class="pl-k">:</span><span class="pl-k">-</span><span class="pl-c1">7</span>)]</pre></div>
+
+<h3>
+<a id="remove-missing-data" class="anchor" href="#remove-missing-data" aria-hidden="true"><span class="octicon octicon-link"></span></a>Remove missing data</h3>
+
+<div class="highlight highlight-r"><pre>unique(colSums(<span class="pl-k">!</span>is.na(<span class="pl-smi">trainData</span>)))</pre></div>
+
+<pre><code>##  [1] 19622   396   374     0   397   406   328   326   395   329   401
+## [12]   404   402   405   322   321   323
+</code></pre>
+
+<p>Many of the columns in the dataset have a lot of missing values (NA)<br>
+As a safety, we remove all columns which have more than half the data missing.</p>
+
+<div class="highlight highlight-r"><pre><span class="pl-smi">selCol</span> <span class="pl-k">&lt;-</span> colSums(<span class="pl-k">!</span>is.na(<span class="pl-smi">trainData</span>))<span class="pl-k">&gt;</span> (nrow(<span class="pl-smi">trainData</span>)<span class="pl-k">/</span><span class="pl-c1">2</span>)
+<span class="pl-smi">trainData</span> <span class="pl-k">&lt;-</span> <span class="pl-smi">trainData</span>[,<span class="pl-smi">selCol</span>]
+<span class="pl-smi">testData</span> <span class="pl-k">&lt;-</span> <span class="pl-smi">testData</span>[,<span class="pl-smi">selCol</span>]
+dim(<span class="pl-smi">trainData</span>)</pre></div>
+
+<pre><code>## [1] 19622    54
+</code></pre>
+
+<div class="highlight highlight-r"><pre>dim(<span class="pl-smi">testData</span>)</pre></div>
+
+<pre><code>## [1] 20 54
+</code></pre>
+
+<h3>
+<a id="training-and-testing" class="anchor" href="#training-and-testing" aria-hidden="true"><span class="octicon octicon-link"></span></a>Training and Testing</h3>
+
+<div class="highlight highlight-r"><pre>set.seed(<span class="pl-c1">3433</span>)
+<span class="pl-v">inTrain</span> <span class="pl-k">=</span> createDataPartition(<span class="pl-smi">trainData</span><span class="pl-k">$</span><span class="pl-smi">classe</span>, <span class="pl-v">p</span> <span class="pl-k">=</span> <span class="pl-c1">0.7</span>, <span class="pl-v">list</span><span class="pl-k">=</span><span class="pl-c1">FALSE</span>)
+<span class="pl-v">training</span> <span class="pl-k">=</span> <span class="pl-smi">trainData</span>[<span class="pl-smi">inTrain</span>,]
+<span class="pl-v">testing</span> <span class="pl-k">=</span> <span class="pl-smi">trainData</span>[<span class="pl-k">-</span><span class="pl-smi">inTrain</span>,]</pre></div>
+
+<p>After removing the unwanted columns we get a dataset with 54 columnns</p>
+
+<h3>
+<a id="preprocess" class="anchor" href="#preprocess" aria-hidden="true"><span class="octicon octicon-link"></span></a>Preprocess</h3>
+
+<p><strong>Check for low variance factors</strong><br>
+It is quite possible that there might be some features which have very low variance<br>
+We want to remove these since it will slow down the training process without adding any accuracy.<br>
+'nearZeroVar' function checks if the descriptors are close to zero or have very low variance.</p>
+
+<div class="highlight highlight-r"><pre><span class="pl-smi">nzv</span> <span class="pl-k">&lt;-</span> nearZeroVar(<span class="pl-smi">training</span>, <span class="pl-v">saveMetrics</span><span class="pl-k">=</span> <span class="pl-c1">TRUE</span>)
+sum(<span class="pl-smi">nzv</span><span class="pl-k">$</span><span class="pl-smi">nzv</span>)</pre></div>
+
+<pre><code>## [1] 0
+</code></pre>
+
+<p>In this case, there were no descriptors with very low variance.<br>
+Hence no descriptors are removed from the dataset.  </p>
+
+<p><strong>Check for highly correlated factors</strong></p>
+
+<div class="highlight highlight-r"><pre><span class="pl-c"># Remove user_name and classe columns</span>
+<span class="pl-smi">filteredDescr</span> <span class="pl-k">&lt;-</span> <span class="pl-smi">training</span>[,<span class="pl-c1">2</span><span class="pl-k">:</span><span class="pl-c1">53</span>]
+<span class="pl-smi">descrCor</span> <span class="pl-k">&lt;-</span>  cor(<span class="pl-smi">filteredDescr</span>)
+<span class="pl-smi">highlyCorDescr</span> <span class="pl-k">&lt;-</span> findCorrelation(<span class="pl-smi">descrCor</span>, <span class="pl-v">cutoff</span> <span class="pl-k">=</span> .<span class="pl-c1">95</span>)
+<span class="pl-smi">filteredDescr</span> <span class="pl-k">&lt;-</span> <span class="pl-smi">filteredDescr</span>[,<span class="pl-k">-</span><span class="pl-smi">highlyCorDescr</span>]
+dim(<span class="pl-smi">filteredDescr</span>)</pre></div>
+
+<pre><code>## [1] 13737    47
+</code></pre>
+
+<div class="highlight highlight-r"><pre><span class="pl-c"># Add back user_name and classe columns</span>
+<span class="pl-smi">trainDescr</span> <span class="pl-k">&lt;-</span> cbind(<span class="pl-smi">filteredDescr</span>, <span class="pl-smi">training</span>[,c(<span class="pl-c1">1</span>,<span class="pl-c1">54</span>)])
+dim(<span class="pl-smi">trainDescr</span>)</pre></div>
+
+<pre><code>## [1] 13737    49
+</code></pre>
+
+<p>Two columns were highly correlated and these are removed.<br>
+Similarly, the training data is also cleaned up.</p>
+
+<div class="highlight highlight-r"><pre><span class="pl-smi">filteredDescr</span> <span class="pl-k">&lt;-</span> <span class="pl-smi">testing</span>[,<span class="pl-c1">2</span><span class="pl-k">:</span><span class="pl-c1">53</span>]
+<span class="pl-smi">filteredDescr</span> <span class="pl-k">&lt;-</span> <span class="pl-smi">filteredDescr</span>[,<span class="pl-k">-</span><span class="pl-smi">highlyCorDescr</span>]
+<span class="pl-smi">testDescr</span> <span class="pl-k">&lt;-</span> cbind(<span class="pl-smi">filteredDescr</span>, <span class="pl-smi">testing</span>[,c(<span class="pl-c1">1</span>,<span class="pl-c1">54</span>)])
+dim(<span class="pl-smi">testDescr</span>)</pre></div>
+
+<pre><code>## [1] 5885   49
+</code></pre>
+
+<h3>
+<a id="train-randomforest" class="anchor" href="#train-randomforest" aria-hidden="true"><span class="octicon octicon-link"></span></a>Train RandomForest</h3>
+
+<div class="highlight highlight-r"><pre><span class="pl-c"># RandomForest</span>
+<span class="pl-smi">startTime</span> <span class="pl-k">&lt;-</span> Sys.time()
+<span class="pl-smi">modFit</span> <span class="pl-k">&lt;-</span> randomForest(<span class="pl-smi">classe</span><span class="pl-k">~</span>., <span class="pl-v">data</span><span class="pl-k">=</span><span class="pl-smi">trainDescr</span>)
+<span class="pl-smi">endTime</span> <span class="pl-k">&lt;-</span> Sys.time()
+<span class="pl-smi">endTime</span><span class="pl-k">-</span><span class="pl-smi">startTime</span></pre></div>
+
+<pre><code>## Time difference of 26.75119 secs
+</code></pre>
+
+<h4>
+<a id="display-model" class="anchor" href="#display-model" aria-hidden="true"><span class="octicon octicon-link"></span></a>Display model</h4>
+
+<div class="highlight highlight-r"><pre><span class="pl-smi">modFit</span></pre></div>
+
+<pre><code>## 
+## Call:
+##  randomForest(formula = classe ~ ., data = trainDescr) 
+##                Type of random forest: classification
+##                      Number of trees: 500
+## No. of variables tried at each split: 6
+## 
+##         OOB estimate of  error rate: 0.5%
+## Confusion matrix:
+##      A    B    C    D    E  class.error
+## A 3905    0    0    0    1 0.0002560164
+## B   14 2640    4    0    0 0.0067720090
+## C    0   14 2378    4    0 0.0075125209
+## D    0    0   25 2226    1 0.0115452931
+## E    0    0    2    4 2519 0.0023762376
+</code></pre>
+
+<p>From the model, we see that <strong>Out of Bag</strong> error was only 0.5%<br>
+If there was no Overfitting, we should get a similar error on testing data  </p>
+
+<div class="highlight highlight-r"><pre>varImpPlot(<span class="pl-smi">modFit</span>, <span class="pl-v">main</span><span class="pl-k">=</span><span class="pl-s"><span class="pl-pds">"</span>Model<span class="pl-pds">"</span></span>)</pre></div>
+
+<p><img src="figure/unnamed-chunk-13-1.png" alt="plot of chunk unnamed-chunk-13"> </p>
+
+<div class="highlight highlight-r"><pre>plot(<span class="pl-smi">modFit</span>, <span class="pl-v">log</span><span class="pl-k">=</span><span class="pl-s"><span class="pl-pds">"</span>y<span class="pl-pds">"</span></span>, <span class="pl-v">main</span><span class="pl-k">=</span><span class="pl-s"><span class="pl-pds">"</span>Model<span class="pl-pds">"</span></span>)</pre></div>
+
+<p><img src="figure/unnamed-chunk-14-1.png" alt="plot of chunk unnamed-chunk-14"> </p>
+
+<h3>
+<a id="apply-model-on-test-data" class="anchor" href="#apply-model-on-test-data" aria-hidden="true"><span class="octicon octicon-link"></span></a>Apply model on test data</h3>
+
+<div class="highlight highlight-r"><pre><span class="pl-smi">accuracy</span> <span class="pl-k">&lt;-</span> mean(predict(<span class="pl-smi">modFit</span>, <span class="pl-v">newdata</span><span class="pl-k">=</span><span class="pl-smi">testDescr</span>) <span class="pl-k">==</span> <span class="pl-smi">testDescr</span><span class="pl-k">$</span><span class="pl-smi">classe</span>)
+<span class="pl-smi">testError</span> <span class="pl-k">&lt;-</span> (<span class="pl-c1">1</span><span class="pl-k">-</span><span class="pl-smi">accuracy</span>)<span class="pl-k">*</span><span class="pl-c1">100</span>
+<span class="pl-smi">testError</span></pre></div>
+
+<pre><code>## [1] 0.7816483
+</code></pre>
+
+<p>There is only <strong>0.8%</strong> error on the test data.<br>
+So, there was no overfitting with the model.</p>
+
+<h3>
+<a id="apply-model-to-actual-testing-data-to-predict-outcome" class="anchor" href="#apply-model-to-actual-testing-data-to-predict-outcome" aria-hidden="true"><span class="octicon octicon-link"></span></a>Apply model to actual testing data to predict outcome</h3>
+
+<div class="highlight highlight-r"><pre><span class="pl-smi">filteredDescr</span> <span class="pl-k">&lt;-</span> <span class="pl-smi">testData</span>[,<span class="pl-c1">2</span><span class="pl-k">:</span><span class="pl-c1">53</span>]
+<span class="pl-smi">filteredDescr</span> <span class="pl-k">&lt;-</span> <span class="pl-smi">filteredDescr</span>[,<span class="pl-k">-</span><span class="pl-smi">highlyCorDescr</span>]
+<span class="pl-smi">testDescr</span> <span class="pl-k">&lt;-</span> cbind(<span class="pl-smi">filteredDescr</span>, <span class="pl-smi">testData</span>[,c(<span class="pl-c1">1</span>,<span class="pl-c1">54</span>)])
+dim(<span class="pl-smi">testDescr</span>)</pre></div>
+
+<pre><code>## [1] 20 49
+</code></pre>
+
+<div class="highlight highlight-r"><pre><span class="pl-c"># Final prediction</span>
+<span class="pl-smi">outcome</span> <span class="pl-k">&lt;-</span> predict(<span class="pl-smi">modFit</span>, <span class="pl-v">newdata</span><span class="pl-k">=</span><span class="pl-smi">testDescr</span>)
+<span class="pl-smi">outcome</span></pre></div>
+
+<pre><code>##  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 
+##  B  A  B  A  A  E  D  B  A  A  B  C  B  A  E  E  A  B  B  B 
+## Levels: A B C D E
+</code></pre>
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">Pml maintained by <a href="https://github.com/anilms">anilms</a></p>
+        <p>Published with <a href="https://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    
+
+  </body>
+</html>
